@@ -1,13 +1,17 @@
 grammar Calculator;
- 
-expression: multiplyingExpression ((PLUS | MINUS) multiplyingExpression)*;
-multiplyingExpression: integralExpression ((MULT | DIV) multiplyingExpression)*;
-integralExpression: MINUS INT | INT;
- 
-INT: [0-9]+ ;
-PLUS: '+' ;
-MINUS: '-' ;
+
+expression: addExpression;
+addExpression: multiplyExpression ((PLUS | MINUS) multiplyExpression)*;
+multiplyExpression: powerExpression ((MULT | DIV) powerExpression)*;
+powerExpression: sqrtExpression (POWER sqrtExpression)?;
+sqrtExpression: atom (SQRT atom)?;
+atom: INT;
+
+INT: [0-9]+;
+PLUS: '+';
+MINUS: '-';
 MULT: '*';
 DIV: '/';
-INTEGRAL: 'cal';
-WS : [ \t\r\n]+ -> skip ;
+POWER: '^';
+SQRT: 'sqrt';
+WS: [ \t\r\n]+ -> skip;
