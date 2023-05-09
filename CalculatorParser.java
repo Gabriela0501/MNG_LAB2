@@ -411,7 +411,8 @@ public class CalculatorParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof CalculatorListener ) ((CalculatorListener)listener).exitAtom(this);
 		}
-	}
+		public TerminalNode MINUS() { return getToken(CalculatorParser.MINUS, 0); }
+    }
 
 	public final AtomContext atom() throws RecognitionException {
 		AtomContext _localctx = new AtomContext(_ctx, getState());

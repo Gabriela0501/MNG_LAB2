@@ -5,50 +5,33 @@ import java.lang.*;
 
 public class CalculatorMainListener extends CalculatorBaseListener{
 
-    Deque<Integer> numbers = new ArrayDeque<>();
+    Deque<Double> numbers = new ArrayDeque<>();
     @Override
     public void enterExpression(CalculatorParser.ExpressionContext ctx) {
         System.out.println("enterExpression:" + ctx.getText());
         super.enterExpression(ctx);
     }
     public void exitExpression(CalculatorParser.AddExpressionContext ctx) {
-        System.out.println("exitExpression:" + ctx.getText());
-        Integer value = numbers.pop();
-        double value2;
-        for (int i = 1; i < ctx.getChildCount(); i=i+2){
-            String operator = ctx.getChild(i).getText();
-            if(operator == "+"){
-                value = value + numbers.pop();
-            }else if(operator == "-"){
-                value = value - numbers.pop();
-            }else if(operator == "*"){
-                value = value * numbers.pop();
-            }else if(operator == "/"){
-                value = value / numbers.pop();
-            }else if(operator == "^"){
-                value2 = Math.pow(value,numbers.pop());
-            }else if(operator == "sqrt"){
-                value2 = Math.pow(value,1/numbers.pop());
-            }else{
-                throw new IllegalArgumentException("Invalid operator");
-            }
-            if (ctx.getChild(i+1).getText().equals("-")&& i < ctx.getChildCount()-1) {
-                numbers.add(-value);
-                value = 0;
-            }
+        double right = numbers.pop();
+        double left = numbers.pop();
+        double result = 0;
+        for(int i = 1;i< ctx.getChildCount();i = i+2)
+        if (ctx.getChild(i).getText() == "+") {
+            result = left + right;
+        } else {
+            result = left - right;
         }
-        numbers.add(value);
-        super.exitAddExpression(ctx);
+        numbers.push(result);
     }
 
     @Override
     public void exitMultiplyExpression(CalculatorParser.MultiplyExpressionContext ctx) {
         System.out.println("exitMultiplyExpression: " + ctx.getText());
         List<CalculatorParser.PowerExpressionContext> powerExpressions = ctx.powerExpression();
-        Integer value = Integer.parseInt(powerExpressions.get(0).getText());
+        double value = numbers.pop();
         for (int i = 1; i < powerExpressions.size(); i++) {
             String operator = ctx.getChild(2*i - 1).getText();
-            int number = Integer.parseInt(powerExpressions.get(i).getText());
+            Double number = numbers.pop();
             switch (operator) {
                 case "*":
                     value = value * number;
@@ -68,12 +51,12 @@ public class CalculatorMainListener extends CalculatorBaseListener{
     @Override
     public void exitAddExpression(CalculatorParser.AddExpressionContext ctx) {
         System.out.println("exitAddExpression:" + ctx.getText());
-        Integer result = 0;
+        double result = 0;
         int znak = 1;
         for (int i = 0; i < ctx.getChildCount(); i++) {
             ParseTree child = ctx.getChild(i);
             if (child instanceof CalculatorParser.MultiplyExpressionContext) {
-                Integer value = numbers.pop();
+                double value = numbers.pop();
                 result = result + znak * value;
             } else if (child.getText().equals("+")) {
                 znak = 1;
@@ -99,7 +82,7 @@ public class CalculatorMainListener extends CalculatorBaseListener{
         }
         else {
             double value = Math.sqrt(numbers.pop());
-            numbers.push((int) value);
+            numbers.push(value);
         }
         super.exitSqrtExpression(ctx);
     }
@@ -123,21 +106,31 @@ public class CalculatorMainListener extends CalculatorBaseListener{
                     throw new IllegalArgumentException("Invalid operator: " + operator);
             }
         }
-        numbers.push((int) result);
+        numbers.push(result);
         super.exitPowerExpression(ctx);
+    }
+
+    @Override
+    public void exitAtom(CalculatorParser.AtomContext ctx) {
+        if(ctx.MINUS() !=null){
+            numbers.add((-1* Double.valueOf(ctx.INT().toString())));
+        }else{
+            numbers.add((Double.valueOf(ctx.INT().toString())));
+        }
+        super.exitAtom(ctx);
     }
 
     public static void main(String[] args) throws Exception {
         //CharStream charStreams = CharStreams.fromFileName("./example.txt");
-        Integer result = calc("4 + 22 / 2 * 3");
+        Double result = calc("2 + 10^1/3");
         System.out.println("Result = " + result);
     }
 
-    public static Integer calc(String expression) {
+    public static Double calc(String expression) {
         return calc(CharStreams.fromString(expression));
     }
 
-    public static Integer calc(CharStream charStream) {
+    public static Double calc(CharStream charStream) {
         CalculatorLexer lexer = new CalculatorLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CalculatorParser parser = new CalculatorParser(tokens);
@@ -147,7 +140,7 @@ public class CalculatorMainListener extends CalculatorBaseListener{
         walker.walk(mainListener, tree);
         return mainListener.getResult();
     }
-    private Integer getResult() {
+    private Double getResult() {
         return numbers.peek();
     }
 }
