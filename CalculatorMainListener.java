@@ -14,30 +14,25 @@ public class CalculatorMainListener extends CalculatorBaseListener{
     public void exitExpression(CalculatorParser.AddExpressionContext ctx) {
         System.out.println("exitExpression:" + ctx.getText());
         Integer value = numbers.pop();
+        double value2;
         for (int i = 1; i < ctx.getChildCount(); i=i+2){
             String operator = ctx.getChild(i).getText();
-
-            switch (operator) {
-                case "+":
-                    value = value + numbers.pop();
-                    break;
-
-                case "-":
-                    value = value - numbers.pop();
-                    break;
-
-                case "*":
-                    value = value * numbers.pop();
-                    break;
-
-                case "/":
-                    value = value / numbers.pop();
-                    break;
-
-                default:
-                    throw new IllegalArgumentException("Invalid operator");
+            if(operator == "+"){
+                value = value + numbers.pop();
+            }else if(operator == "-"){
+                value = value - numbers.pop();
+            }else if(operator == "*"){
+                value = value * numbers.pop();
+            }else if(operator == "/"){
+                value = value / numbers.pop();
+            }else if(operator == "^"){
+                value2 = Math.pow(value,numbers.pop());
+            }else if(operator == "sqrt"){
+                value2 = Math.pow(value,1/numbers.pop());
+            }else{
+                throw new IllegalArgumentException("Invalid operator");
             }
-            if (i+1 < ctx.getChildCount() && ctx.getChild(i+1).getText().equals("-")) {
+            if (ctx.getChild(i+1).getText().equals("-")&& i < ctx.getChildCount()-1) {
                 numbers.add(-value);
                 value = 0;
             }
@@ -69,14 +64,34 @@ public class CalculatorMainListener extends CalculatorBaseListener{
         numbers.add(value);
         super.exitMultiplyExpression(ctx);
     }
+
+    @Override
+    public void exitAddExpression(CalculatorParser.AddExpressionContext ctx) {
+        System.out.println("exitAddExpression:" + ctx.getText());
+        Integer result = 0;
+        int znak = 1;
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            ParseTree child = ctx.getChild(i);
+            if (child instanceof CalculatorParser.MultiplyExpressionContext) {
+                Integer value = numbers.pop();
+                result = result + znak * value;
+            } else if (child.getText().equals("+")) {
+                znak = 1;
+            } else if (child.getText().equals("-")) {
+                znak = -1;
+            }
+        }
+        numbers.add(result);
+        super.exitAddExpression(ctx);
+    }
     //Kod zakomentowany jest to kod, który dotyczy obliczania potęg i pierwiastków, ale niestety coś w nim
     //nie działa i przez to psuje się cały program, błąd jaki wyskakuje to Stack is empty :) niestety
     //po wielu probach zmian nadal nie działa
-/*    @Override
+    @Override
     public void exitSqrtExpression(CalculatorParser.SqrtExpressionContext ctx) {
         System.out.println("exitSqrtExpression:" + ctx.getText());
         if (numbers.isEmpty()) {
-            // handle the error, for example:
+
             throw new IllegalArgumentException("Stack is empty!");
         }
         else if (numbers.peek() < 0) {
@@ -110,26 +125,6 @@ public class CalculatorMainListener extends CalculatorBaseListener{
         }
         numbers.push((int) result);
         super.exitPowerExpression(ctx);
-    }
-*/
-    @Override
-    public void exitAddExpression(CalculatorParser.AddExpressionContext ctx) {
-        System.out.println("exitAddExpression:" + ctx.getText());
-        Integer result = 0;
-        int znak = 1;
-        for (int i = 0; i < ctx.getChildCount(); i++) {
-            ParseTree child = ctx.getChild(i);
-            if (child instanceof CalculatorParser.MultiplyExpressionContext) {
-                Integer value = numbers.pop();
-                result += znak * value;
-            } else if (child.getText().equals("+")) {
-                znak = 1;
-            } else if (child.getText().equals("-")) {
-                znak = -1;
-            }
-        }
-        numbers.add(result);
-        super.exitAddExpression(ctx);
     }
 
     public static void main(String[] args) throws Exception {
