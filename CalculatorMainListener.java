@@ -122,7 +122,7 @@ public class CalculatorMainListener extends CalculatorBaseListener{
 
     public static void main(String[] args) throws Exception {
         //CharStream charStreams = CharStreams.fromFileName("./example.txt");
-        Double result = calc("2 + 10^1/3");
+        Double result = calc("6 + 2/3^1/5");
         System.out.println("Result = " + result);
     }
 
